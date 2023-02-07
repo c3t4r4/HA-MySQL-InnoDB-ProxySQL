@@ -25,7 +25,6 @@
 1. Instalação do MySQL:
    - Instale o MySQL no Debian 11:
     ```sh
-    sudo apt update
     sudo apt install mysql-server
     ```
 
@@ -173,3 +172,24 @@
 
 Com esses passos, você deve ter uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL configurada no seu Debian 11. Certifique-se de testar sua configuração antes de colocá-la em produção.
 
+A conexão com o banco de dados é feita através do ProxySQL da mesma forma que seria feita com um banco de dados diretamente. Você precisa especificar o endereço IP e a porta do ProxySQL como seu host de banco de dados e a porta 3306 (padrão para o MySQL). Além disso, você precisa fornecer o nome de usuário e a senha para autenticação no banco de dados.
+
+Aqui está um exemplo de como realizar a conexão ao banco de dados através do ProxySQL em PHP:
+```php
+    <?php
+    $host = "127.0.0.1";
+    $port = 3306;
+    $user = "username";
+    $password = "password";
+    $dbname = "database_name";
+
+    // Cria uma nova conexão
+    $conn = new mysqli($host, $user, $password, $dbname, $port);
+
+    // Verifica se a conexão foi bem-sucedida
+    if ($conn->connect_error) {
+        die("A conexão falhou: " . $conn->connect_error);
+    }
+    echo "Conexão realizada com sucesso.";
+    ?>
+```
