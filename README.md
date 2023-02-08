@@ -10,22 +10,22 @@ ___
 ## Passo a passo
 
 0. Preparação:
-   - Instale o Debian 11 em pelo menos três servidores diferentes. Estes servidores serão os membros do seu cluster.
-   - Atualize as informações de pacote e instale o software-properties-common para habilitar o repositório do MySQL:
-   ```sh
-    sudo apt update
-    sudo apt install software-properties-common
+    - Instale o Debian 11 em pelo menos três servidores diferentes. Estes servidores serão os membros do seu cluster.
+    - Atualize as informações de pacote e instale o software-properties-common para habilitar o repositório do MySQL:
+    ```sh
+    sudo apt update && sudo apt install software-properties-common wget -y
     ```
 
-   - Adicione o repositório do MySQL ao sistema:
-   ```sh
-    sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 8C718D3B5072E1F5
-    sudo add-apt-repository 'deb https://repo.mysql.com/apt/debian/ bullseye mysql-8.0'
-    sudo apt update
+    - Adicione o repositório do MySQL ao sistema:
+    ```sh
+    wget https://repo.mysql.com//mysql-apt-config_0.8.22-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.22-1_all.deb && sudo apt update
     ```
+
+    - Configuração Padrão:
+    ![Config MySQL](imagem1.png "Config MySQL")
 ___
 1. Instalação do MySQL:
-   - Instale o MySQL no Debian 11:
+    - Instale o MySQL no Debian 11:
     ```sh
     sudo apt install mysql-server
     ```
