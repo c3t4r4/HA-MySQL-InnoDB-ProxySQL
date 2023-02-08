@@ -53,15 +53,6 @@ ___
 ___
 2. Configuração do MySQL:
     1. Configurando MASTER:
-        - Acesse o console do MySQL:
-        ```sh
-        mysql -u root -p
-        ```
-
-        - Configure o usuário e a senha para o acesso remoto ao MySQL:
-        ```sh
-        mysql> ALTER USER 'root'@'localhost';
-        ```
 
         - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
         ```sh
@@ -91,12 +82,17 @@ ___
         >```
 
         - Essa parte você já precisa ter o ip do slave para criar o usuário:
-        ```sh
-        mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
+            - Acesse o console do MySQL:
+            ```sh
+            mysql -u root -p
+            ```
+            - Configurando usuário slave:
+            ```sh
+            mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
 
-        mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
-        mysql> FLUSH PRIVILEGES;
-        ```
+            mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
+            mysql> FLUSH PRIVILEGES;
+            ```
     2. Configurando SLAVE:
         - Configure o arquivo de configuração do MySQL slave:
         ```sh
