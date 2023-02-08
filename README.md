@@ -96,7 +96,7 @@ ___
     2. Configurando SLAVE:
         - Configure o arquivo de configuração do MySQL slave:
         ```sh
-        sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
+        sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
         ```
         - Adicione as seguintes linhas:
         ```nano
