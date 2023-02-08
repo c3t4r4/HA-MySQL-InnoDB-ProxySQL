@@ -22,11 +22,11 @@ ___
 
     - Adicione o repositório do MySQL ao sistema:
     ```sh
-    wget https://repo.mysql.com//mysql-apt-config_0.8.22-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.22-1_all.deb && sudo apt update
+    wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
     ```
     > Proxmox use isso:
     > ```sh
-    >wget https://repo.mysql.com//mysql-apt-config_0.8.22-1_all.deb && dpkg -i mysql-apt-config_0.8.22-1_all.deb && apt update
+    >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
     >```
 
     - Configuração Padrão:
@@ -35,7 +35,7 @@ ___
 1. Instalação do MySQL:
     - Instale o MySQL no Debian 11:
     ```sh
-    sudo apt install mysql-server -y
+    sudo apt install mysql-server -y && mysql_secure_installation
     ```
     > Proxmox use isso:
     > ```sh
@@ -60,14 +60,7 @@ ___
 
         - Configure o usuário e a senha para o acesso remoto ao MySQL:
         ```sh
-        mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'senha-root';
-
-        mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
-
-        mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
-        mysql> FLUSH PRIVILEGES;
-
-        mysql> SHOW MASTER STATUS;
+        mysql> ALTER USER 'root'@'localhost';
         ```
 
         - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
@@ -76,7 +69,7 @@ ___
         ```
         > Proxmox use isso:
         > ```sh
-        >nano /etc/mysql/mysql.conf.d/mysql.cnf
+        >nano /etc/mysql/mysql.conf.d/mysqld.cnf
         >```
 
         - Adicione as seguintes linhas:
@@ -96,6 +89,14 @@ ___
         > ```sh
         >systemctl restart mysql && systemctl status mysql
         >```
+
+        - Essa parte você já precisa ter o ip do slave para criar o usuário:
+        ```sh
+        mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
+
+        mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
+        mysql> FLUSH PRIVILEGES;
+        ```
     2. Configurando SLAVE:
         - Configure o arquivo de configuração do MySQL slave:
         ```sh
@@ -174,11 +175,11 @@ ___
 4. Configuração do InnoDB:
     - Configure o arquivo de configuração do MySQL para usar o InnoDB
     ```sh
-    sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
+    sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
     ```
     > Proxmox use isso:
     > ```sh
-    >nano /etc/mysql/mysql.conf.d/mysql.cnf
+    >nano /etc/mysql/mysql.conf.d/mysqld.cnf
     >```
 
     - Adicione as seguintes linhas:
