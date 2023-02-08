@@ -70,11 +70,11 @@ ___
 
     - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
     ```sh
-    sudo nano /etc/mysql/conf.d/mysql.cnf
+    sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
     ```
     > Proxmox use isso:
     > ```sh
-    >nano /etc/mysql/conf.d/mysql.cnf
+    >nano /etc/mysql/mysql.conf.d/mysql.cnf
     >```
 
     - Adicione as seguintes linhas:
@@ -83,25 +83,28 @@ ___
     bind-address = 0.0.0.0
     server-id = 1
     log_bin = /var/log/mysql/mysql-bin.log
-    ```
-
-    - Para mais de um range use:
-    ```nano
-    [mysqld]
-    bind-address = 127.0.0.0,192.0.0.0
-    server-id = 1
-    log_bin = /var/log/mysql/mysql-bin.log
+    max_binlog_size = 500M
     ```
 
     - Reinicie o MySQL:
     ```sh
-    sudo systemctl restart mysql
+    sudo systemctl restart mysql && sudo systemctl status mysql
     ```
     > Proxmox use isso:
     > ```sh
-    >systemctl restart mysql
+    >systemctl restart mysql && systemctl status mysql
     >```
 ___
+    - Configurando Slave:
+    ```nano
+    [mysqld]
+    bind-address = 0.0.0.0
+    server-id = 2
+    read_only = 1
+    log_bin = /var/log/mysql/mysql-bin.log
+    max_binlog_size = 500M
+    ```
+
 3. Replicação do MySQL:
     - Acesse o console do MySQL no servidor principal:
     ```sh
@@ -126,11 +129,11 @@ ___
 4. Configuração do InnoDB:
     - Configure o arquivo de configuração do MySQL para usar o InnoDB
     ```sh
-    sudo nano /etc/mysql/conf.d/mysql.cnf
+    sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
     ```
     > Proxmox use isso:
     > ```sh
-    >nano /etc/mysql/conf.d/mysql.cnf
+    >nano /etc/mysql/mysql.conf.d/mysql.cnf
     >```
 
     - Adicione as seguintes linhas:
