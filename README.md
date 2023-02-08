@@ -55,10 +55,11 @@ ___
     ```sh
     mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'senha-root';
 
-    mysql> create user 'newuser-replication' identified by 'strong-pass';
-    mysql> GRANT ALL PRIVILEGES ON *.* TO 'newuser-replication'@'%';
-
+    mysql> create user 'newuser-replication-1' identified by 'strong-pass';
+    mysql> GRANT REPLICATION SLAVE ON *.* TO 'newuser-replication-1';
     mysql> FLUSH PRIVILEGES;
+
+    mysql> SHOW MASTER STATUS;
     ```
 
     - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
@@ -70,12 +71,16 @@ ___
     ```nano
     [mysqld]
     bind-address = 0.0.0.0
+    server-id = 1
+    log_bin = /var/log/mysql/mysql-bin.log
     ```
 
     - Para mais de um range use:
     ```nano
     [mysqld]
     bind-address = 127.0.0.0,192.0.0.0
+    server-id = 1
+    log_bin = /var/log/mysql/mysql-bin.log
     ```
 
     - Reinicie o MySQL:
