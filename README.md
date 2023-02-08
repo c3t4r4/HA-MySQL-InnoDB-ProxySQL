@@ -65,7 +65,7 @@ ___
 
         - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
         ```sh
-        sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
+        sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
         ```
         > Proxmox use isso:
         > ```sh
