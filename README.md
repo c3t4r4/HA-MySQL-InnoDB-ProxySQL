@@ -1,10 +1,12 @@
 # Tutorial para criar uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL no Debian 11
 
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+___
 ## Pré-requisitos
 - Três servidores Debian 11 com acesso à internet.
 - Sendo um para o ProxySQL e os demais como Master-Slave do MySQL.
 - Uma conta de superusuário (root) nos servidores.
-
+___
 ## Passo a passo
 
 0. Preparação:
@@ -21,7 +23,7 @@
     sudo add-apt-repository 'deb https://repo.mysql.com/apt/debian/ bullseye mysql-8.0'
     sudo apt update
     ```
-
+___
 1. Instalação do MySQL:
    - Instale o MySQL no Debian 11:
     ```sh
@@ -37,7 +39,7 @@
     ```sh
     sudo systemctl status mysql
     ```
-
+___
 2. Configuração do MySQL:
     - Instale o pacote de gerenciamento de configuração do MySQL:
     ```sh
@@ -70,7 +72,7 @@
     ```sh
     sudo systemctl restart mysql
     ```
-
+___
 3. Replicação do MySQL:
     - Acesse o console do MySQL no servidor principal:
     ```sh
@@ -91,8 +93,7 @@
     ```sh
     mysql> SHOW SLAVE STATUS\G
     ```
-
-
+___
 4. Configuração do InnoDB:
     - Configure o arquivo de configuração do MySQL para usar o InnoDB
     ```sh
@@ -109,7 +110,7 @@
     ```sh
     sudo systemctl restart mysql
     ```
-
+___
 5. Instalação do ProxySQL:
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
@@ -126,7 +127,7 @@
     ```sh
     sudo apt install proxysql
     ```
-
+___
 6. Configure o ProxySQL: 
     - Configure o ProxySQL para apontar para o seu servidor principal e secundário:
     ```sh
@@ -153,7 +154,7 @@
     ```sh
     sudo systemctl restart proxysql
     ```
-
+___
 7. Verificação da configuração:
     - Verifique o status do ProxySQL:
     ```sh
@@ -169,12 +170,14 @@
     ```sh
     SELECT hostgroup_id, hostname, port, status, weight FROM mysql_servers;
     ```
+___
 
-Com esses passos, você deve ter uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL configurada no seu Debian 11. Certifique-se de testar sua configuração antes de colocá-la em produção.
+> Com esses passos, você deve ter uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL configurada no seu Debian 11. Certifique-se de testar sua configuração antes de colocá-la em produção.
+>
+>A conexão com o banco de dados é feita através do ProxySQL da mesma forma que seria feita com um banco de dados diretamente. Você precisa especificar o endereço IP e a porta do ProxySQL como seu host de banco de dados e a porta 3306 (padrão para o MySQL). Além disso, você precisa fornecer o nome de usuário e a senha para autenticação no banco de dados.
+___
 
-A conexão com o banco de dados é feita através do ProxySQL da mesma forma que seria feita com um banco de dados diretamente. Você precisa especificar o endereço IP e a porta do ProxySQL como seu host de banco de dados e a porta 3306 (padrão para o MySQL). Além disso, você precisa fornecer o nome de usuário e a senha para autenticação no banco de dados.
-
-Aqui está um exemplo de como realizar a conexão ao banco de dados através do ProxySQL em PHP:
+>Aqui está um exemplo de como realizar a conexão ao banco de dados através do ProxySQL em PHP:
 ```php
     <?php
     $host = "127.0.0.1";
