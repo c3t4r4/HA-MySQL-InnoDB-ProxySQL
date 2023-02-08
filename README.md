@@ -231,7 +231,9 @@ ___
     > ```sh
     >apt install proxysql
     >```
-___
+
+>>> VALIDADO ATE AQUI
+
 6. Configure o ProxySQL: 
     - Configure o ProxySQL para apontar para o seu servidor principal e secundário:
     ```sh
