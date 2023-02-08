@@ -53,19 +53,29 @@ ___
 
     - Configure o usuário e a senha para o acesso remoto ao MySQL:
     ```sh
-    mysql> GRANT ALL PRIVILEGES ON . TO 'usuario'@'%' IDENTIFIED BY 'senha' WITH GRANT OPTION;
+    mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'senha-root';
+
+    mysql> create user 'newuser-replication' identified by 'strong-pass';
+    mysql> GRANT ALL PRIVILEGES ON *.* TO 'newuser-replication'@'%';
+
     mysql> FLUSH PRIVILEGES;
     ```
 
     - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
     ```sh
-    sudo nano /etc/mysql/my.cnf
+    sudo nano /etc/mysql/conf.d/mysql.cnf
     ```
 
     - Adicione as seguintes linhas:
     ```nano
     [mysqld]
     bind-address = 0.0.0.0
+    ```
+
+    - Para mais de um range use:
+    ```nano
+    [mysqld]
+    bind-address = 127.0.0.0,192.0.0.0
     ```
 
     - Reinicie o MySQL:
