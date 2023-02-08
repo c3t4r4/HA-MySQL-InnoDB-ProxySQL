@@ -13,11 +13,11 @@ ___
     - Instale o Debian 11 em pelo menos três servidores diferentes. Estes servidores serão os membros do seu cluster.
     - Atualize as informações de pacote e instale o software-properties-common para habilitar o repositório do MySQL:
     ```sh
-    sudo apt update && sudo timedatectl set-timezone America/Sao_Paulo && sudo apt update && sudo apt upgrade -y && sudo apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all -y install software-properties-common wget -y
+    sudo apt update && sudo timedatectl set-timezone America/Sao_Paulo && sudo apt update && sudo apt upgrade -y && sudo apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all -y install software-properties-common wget gnupg -y
     ```
     > Proxmox use isso:
     > ```sh
-    >apt update && timedatectl set-timezone America/Sao_Paulo && apt update && apt upgrade -y && apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all wget -y
+    >apt update && timedatectl set-timezone America/Sao_Paulo && apt update && apt upgrade -y && apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all wget gnupg -y
     >```
 
     - Adicione o repositório do MySQL ao sistema:
@@ -35,11 +35,11 @@ ___
 1. Instalação do MySQL:
     - Instale o MySQL no Debian 11:
     ```sh
-    sudo apt install mysql-server
+    sudo apt install mysql-server -y
     ```
     > Proxmox use isso:
     > ```sh
-    >apt install mysql-server
+    >apt install mysql-server -y
     >```
 
     - Verifique se o MySQL está rodando:
@@ -52,15 +52,6 @@ ___
     >```
 ___
 2. Configuração do MySQL:
-    - Instale o pacote de gerenciamento de configuração do MySQL:
-    ```sh
-    sudo apt install mysql-community-server-advanced
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >apt install mysql-community-server-advanced
-    >```
-
     - Acesse o console do MySQL:
     ```sh
     mysql -u root -p
