@@ -39,7 +39,7 @@ ___
     ```
     > Proxmox use isso:
     > ```sh
-    >apt install mysql-server -y
+    >apt install mysql-server -y && mysql_secure_installation
     >```
 
     - Verifique se o MySQL está rodando:
