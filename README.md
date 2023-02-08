@@ -107,7 +107,7 @@ ___
         log_bin = /var/log/mysql/mysql-bin.log
         max_binlog_size = 500M
         ```
-        
+
         - Reinicie o MySQL:
         ```sh
         sudo systemctl restart mysql && sudo systemctl status mysql
@@ -195,11 +195,11 @@ ___
 
     - Reinicie o MySQL:
     ```sh
-    sudo systemctl restart mysql
+    sudo systemctl restart mysql && sudo systemctl status mysql
     ```
     > Proxmox use isso:
     > ```sh
-    >systemctl restart mysql
+    >systemctl restart mysql && systemctl status mysql
     >```
 ___
 5. Instalação do ProxySQL:
