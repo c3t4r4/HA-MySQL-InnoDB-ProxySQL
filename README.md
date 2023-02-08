@@ -13,13 +13,21 @@ ___
     - Instale o Debian 11 em pelo menos três servidores diferentes. Estes servidores serão os membros do seu cluster.
     - Atualize as informações de pacote e instale o software-properties-common para habilitar o repositório do MySQL:
     ```sh
-    sudo apt update && sudo apt install software-properties-common wget -y
+    sudo apt update && sudo timedatectl set-timezone America/Sao_Paulo && sudo apt update && sudo apt upgrade -y && sudo apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all -y install software-properties-common wget -y
     ```
+    > Proxmox use isso:
+    > ```sh
+    >apt update && timedatectl set-timezone America/Sao_Paulo && apt update && apt upgrade -y && apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all wget -y
+    >```
 
     - Adicione o repositório do MySQL ao sistema:
     ```sh
     wget https://repo.mysql.com//mysql-apt-config_0.8.22-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.22-1_all.deb && sudo apt update
     ```
+    > Proxmox use isso:
+    > ```sh
+    >wget https://repo.mysql.com//mysql-apt-config_0.8.22-1_all.deb && dpkg -i mysql-apt-config_0.8.22-1_all.deb && apt update
+    >```
 
     - Configuração Padrão:
     ![Config MySQL](imagem1.png "Config MySQL")
@@ -29,22 +37,29 @@ ___
     ```sh
     sudo apt install mysql-server
     ```
-
-    - Inicie o MySQL:
-    ```sh
-    sudo systemctl start mysql
-    ```
+    > Proxmox use isso:
+    > ```sh
+    >apt install mysql-server
+    >```
 
     - Verifique se o MySQL está rodando:
     ```sh
     sudo systemctl status mysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >systemctl status mysql
+    >```
 ___
 2. Configuração do MySQL:
     - Instale o pacote de gerenciamento de configuração do MySQL:
     ```sh
     sudo apt install mysql-community-server-advanced
     ```
+    > Proxmox use isso:
+    > ```sh
+    >apt install mysql-community-server-advanced
+    >```
 
     - Acesse o console do MySQL:
     ```sh
@@ -66,6 +81,10 @@ ___
     ```sh
     sudo nano /etc/mysql/conf.d/mysql.cnf
     ```
+    > Proxmox use isso:
+    > ```sh
+    >nano /etc/mysql/conf.d/mysql.cnf
+    >```
 
     - Adicione as seguintes linhas:
     ```nano
@@ -87,6 +106,10 @@ ___
     ```sh
     sudo systemctl restart mysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >systemctl restart mysql
+    >```
 ___
 3. Replicação do MySQL:
     - Acesse o console do MySQL no servidor principal:
@@ -112,8 +135,12 @@ ___
 4. Configuração do InnoDB:
     - Configure o arquivo de configuração do MySQL para usar o InnoDB
     ```sh
-    sudo nano /etc/mysql/my.cnf
+    sudo nano /etc/mysql/conf.d/mysql.cnf
     ```
+    > Proxmox use isso:
+    > ```sh
+    >nano /etc/mysql/conf.d/mysql.cnf
+    >```
 
     - Adicione as seguintes linhas:
     ```nano
@@ -125,6 +152,10 @@ ___
     ```sh
     sudo systemctl restart mysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >systemctl restart mysql
+    >```
 ___
 5. Instalação do ProxySQL:
     - Adicione o repositório do ProxySQL ao seu sistema:
@@ -132,22 +163,39 @@ ___
     sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list
     sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
     ```
+    > Proxmox use isso:
+    > ```sh
+    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list
+    apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    >```
 
     - Atualize a lista de pacotes:
     ```sh
     sudo apt update
     ```
+    > Proxmox use isso:
+    > ```sh
+    >apt update
+    >```
 
     - Instale o ProxySQL:
     ```sh
     sudo apt install proxysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >apt install proxysql
+    >```
 ___
 6. Configure o ProxySQL: 
     - Configure o ProxySQL para apontar para o seu servidor principal e secundário:
     ```sh
     sudo nano /etc/proxysql.cnf
     ```
+    > Proxmox use isso:
+    > ```sh
+    >nano /etc/proxysql.cnf
+    >```
 
     - Adicione as seguintes linhas:
     ```nano
@@ -169,12 +217,20 @@ ___
     ```sh
     sudo systemctl restart proxysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >systemctl restart proxysql
+    >```
 ___
 7. Verificação da configuração:
     - Verifique o status do ProxySQL:
     ```sh
     sudo systemctl status proxysql
     ```
+    > Proxmox use isso:
+    > ```sh
+    >systemctl status proxysql
+    >```
 
     - Acesse o console do ProxySQL:
     ```sh
