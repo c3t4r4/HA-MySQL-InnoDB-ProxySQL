@@ -52,78 +52,123 @@ ___
     >```
 ___
 2. Configuração do MySQL:
-    - Acesse o console do MySQL:
-    ```sh
-    mysql -u root -p
-    ```
+    1. Configurando MASTER:
+        - Acesse o console do MySQL:
+        ```sh
+        mysql -u root -p
+        ```
 
-    - Configure o usuário e a senha para o acesso remoto ao MySQL:
-    ```sh
-    mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'senha-root';
+        - Configure o usuário e a senha para o acesso remoto ao MySQL:
+        ```sh
+        mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'senha-root';
 
-    mysql> create user 'newuser-replication-1' identified by 'strong-pass';
-    mysql> GRANT REPLICATION SLAVE ON *.* TO 'newuser-replication-1';
-    mysql> FLUSH PRIVILEGES;
+        mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
 
-    mysql> SHOW MASTER STATUS;
-    ```
+        mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
+        mysql> FLUSH PRIVILEGES;
 
-    - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
-    ```sh
-    sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >nano /etc/mysql/mysql.conf.d/mysql.cnf
-    >```
+        mysql> SHOW MASTER STATUS;
+        ```
 
-    - Adicione as seguintes linhas:
-    ```nano
-    [mysqld]
-    bind-address = 0.0.0.0
-    server-id = 1
-    log_bin = /var/log/mysql/mysql-bin.log
-    max_binlog_size = 500M
-    ```
+        - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
+        ```sh
+        sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >nano /etc/mysql/mysql.conf.d/mysql.cnf
+        >```
 
-    - Reinicie o MySQL:
-    ```sh
-    sudo systemctl restart mysql && sudo systemctl status mysql
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >systemctl restart mysql && systemctl status mysql
-    >```
-___
-    - Configurando Slave:
-    ```nano
-    [mysqld]
-    bind-address = 0.0.0.0
-    server-id = 2
-    read_only = 1
-    log_bin = /var/log/mysql/mysql-bin.log
-    max_binlog_size = 500M
-    ```
+        - Adicione as seguintes linhas:
+        ```nano
+        [mysqld]
+        bind-address = 0.0.0.0
+        server-id = 1
+        log_bin = /var/log/mysql/mysql-bin.log
+        max_binlog_size = 500M
+        ```
 
+        - Reinicie o MySQL:
+        ```sh
+        sudo systemctl restart mysql && sudo systemctl status mysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl restart mysql && systemctl status mysql
+        >```
+    2. Configurando SLAVE:
+        - Configure o arquivo de configuração do MySQL slave:
+        ```sh
+        sudo nano /etc/mysql/mysql.conf.d/mysql.cnf
+        ```
+        - Adicione as seguintes linhas:
+        ```nano
+        [mysqld]
+        bind-address = 0.0.0.0
+        server-id = 2
+        read_only = 1
+        log_bin = /var/log/mysql/mysql-bin.log
+        max_binlog_size = 500M
+        ```
+
+        - Acesse o console do MySQL:
+        ```sh
+        mysql -u root -p
+        ```
+
+        - Coletando Info do Server:
+        ```sh
+        mysql> SHOW MASTER STATUS;
+        ```
+
+        - Coletando Info do Server:
+        ```sh
+        *************************** 1. row ***************************
+        File: mysql-bin.000002
+        Position: 1047
+        Binlog_Do_DB: 
+        Binlog_Ignore_DB: 
+        Executed_Gtid_Set: 
+        1 row in set (0.00 sec)
+        ```
+
+        - Configure o usuário e a senha para o acesso remoto ao MySQL:
+        ```sh
+        mysql> CHANGE MASTER TO
+            MASTER_HOST='ip-do-master',
+            MASTER_USER='user-slave-1',
+            MASTER_PASSWORD='passwd-user-slave-1',
+            MASTER_PORT=3306,
+            MASTER_LOG_FILE='mysql-bin.000002',
+            MASTER_LOG_POS=1047,
+            MASTER_CONNECT_RETRY=10;
+        ```
 3. Replicação do MySQL:
-    - Acesse o console do MySQL no servidor principal:
-    ```sh
-    mysql -u root -p
-    ```
-
-    - Configure o servidor principal para permitir a replicação:
-    ```sh
-    mysql> CHANGE MASTER TO MASTER_HOST='<endereço IP do servidor secundário>', MASTER_USER='usuario', MASTER_PASSWORD='senha', MASTER_PORT=3306;
-    ```
-
-    - Inicie a replicação:
+    - Iniciando Copia para o Slave:
     ```sh
     mysql> START SLAVE;
     ```
 
-    - Verifique o status da replicação:
+    - Verificando Status:
     ```sh
-    mysql> SHOW SLAVE STATUS\G
+    mysql> SHOW SLAVE STATUS\G;
+    ```
+
+    - Saida:
+    ```sh
+    *************************** 1. row ***************************
+            Slave_IO_State: Waiting for master to send event
+                Master_Host: ip-do-master
+                Master_User: user-slave-1
+                Master_Port: 3306
+            Connect_Retry: 60
+            Master_Log_File: mysql-bin.000002
+        Read_Master_Log_Pos: 1047
+            Relay_Log_File: slave-relay-bin.000002
+            Relay_Log_Pos: 324
+    Relay_Master_Log_File: mysql-bin.000002
+            Slave_IO_Running: Yes
+        Slave_SQL_Running: Yes
     ```
 ___
 4. Configuração do InnoDB:
