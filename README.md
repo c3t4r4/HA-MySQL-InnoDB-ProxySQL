@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
 ## Diagrama Usado:
-![Diagrama](diagrama.png "Diagrama")
+![Diagrama](diagrama1.png "Diagrama")
 ___
 ## Pré-requisitos
 - 04 servidores Debian 11 com acesso à internet.
@@ -373,7 +373,7 @@ ___
 
 4. Instalação do ProxySQL:
 
-    
+
 
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
