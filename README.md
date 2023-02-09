@@ -201,17 +201,17 @@ ___
     > ```sh
     >systemctl restart mysql && systemctl status mysql
     >```
+
+    >>> VALIDADO ATE AQUI
 ___
 5. Instalação do ProxySQL:
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
-    sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list
-    sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list && sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
     ```
     > Proxmox use isso:
     > ```sh
-    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list
-    apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list && apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
     >```
 
     - Atualize a lista de pacotes:
@@ -231,8 +231,6 @@ ___
     > ```sh
     >apt install proxysql
     >```
-
->>> VALIDADO ATE AQUI
 
 6. Configure o ProxySQL: 
     - Configure o ProxySQL para apontar para o seu servidor principal e secundário:
