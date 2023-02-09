@@ -169,7 +169,87 @@ ___
         max_binlog_size = 500M
         ```
 
-2. Configurando SLAVE 1:
+        - Reinicie o MySQL:
+        ```sh
+        sudo systemctl restart mysql && sudo systemctl status mysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl restart mysql && systemctl status mysql
+        >```
+
+    - Configure replicação:
+
+         - Acesse o console do MySQL:
+        ```sh
+        mysql -u root -p
+        ```
+
+        - Coletando Info do Server:
+        ```sh
+        mysql> SHOW MASTER STATUS;
+        ```
+
+        - Saida:
+        ```sh
+        *************************** 1. row ***************************
+        File: mysql-bin.000002
+        Position: 1047
+        Binlog_Do_DB: 
+        Binlog_Ignore_DB: 
+        Executed_Gtid_Set: 
+        1 row in set (0.00 sec)
+        ```
+
+        - Configure o usuário e a senha para o acesso remoto ao MySQL:
+        ```sh
+        mysql> CHANGE MASTER TO
+            MASTER_HOST='12.10.10.209',
+            MASTER_USER='user-slave-1',
+            MASTER_PASSWORD='passwd-user-slave-1',
+            MASTER_PORT=3306,
+            MASTER_LOG_FILE='mysql-bin.000002',
+            MASTER_LOG_POS=1047,
+            MASTER_CONNECT_RETRY=10;
+        ```
+
+        - Iniciando Copia para o Slave:
+        ```sh
+        mysql> START SLAVE;
+        ```
+
+        - Verificando Status:
+        ```sh
+        mysql> SHOW SLAVE STATUS\G;
+        ```
+
+        - Saida:
+        ```sh
+        *************************** 1. row ***************************
+                Slave_IO_State: Waiting for master to send event
+                    Master_Host: 12.10.10.209
+                    Master_User: user-slave-1
+                    Master_Port: 3306
+                Connect_Retry: 60
+                Master_Log_File: mysql-bin.000002
+            Read_Master_Log_Pos: 1047
+                Relay_Log_File: slave-relay-bin.000002
+                Relay_Log_Pos: 324
+        Relay_Master_Log_File: mysql-bin.000002
+                Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+        ```
+___
+
+3. Configurando SLAVE 2:
+
+    - Após Executar o Passo 0.
+
+    - Configurando UFW:
+        - Adicione regras UFW:
+            ```sh
+            ufw enable && ufw allow from 12.10.10.0/24 && ufw status
+            ```
     - Instalação do MySQL:
 
         - Adicione o repositório do MySQL ao sistema:
@@ -211,40 +291,90 @@ ___
 
         default-storage-engine = InnoDB
         bind-address = 0.0.0.0
-        server-id = 2
+        server-id = 3
         read_only = 1
         log_bin = /var/log/mysql/mysql-bin.log
         max_binlog_size = 500M
         ```
+
+        - Reinicie o MySQL:
+        ```sh
+        sudo systemctl restart mysql && sudo systemctl status mysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl restart mysql && systemctl status mysql
+        >```
+
+    - Configure replicação:
+
+         - Acesse o console do MySQL:
+        ```sh
+        mysql -u root -p
+        ```
+
+        - Coletando Info do Server:
+        ```sh
+        mysql> SHOW MASTER STATUS;
+        ```
+
+        - Saida:
+        ```sh
+        *************************** 1. row ***************************
+        File: mysql-bin.000003
+        Position: 115
+        Binlog_Do_DB: 
+        Binlog_Ignore_DB: 
+        Executed_Gtid_Set: 
+        1 row in set (0.00 sec)
+        ```
+
+        - Configure o usuário e a senha para o acesso remoto ao MySQL:
+        ```sh
+        mysql> CHANGE MASTER TO
+            MASTER_HOST='12.10.10.209',
+            MASTER_USER='user-slave-2',
+            MASTER_PASSWORD='passwd-user-slave-2',
+            MASTER_PORT=3306,
+            MASTER_LOG_FILE='mysql-bin.000003',
+            MASTER_LOG_POS=115,
+            MASTER_CONNECT_RETRY=10;
+        ```
+
+        - Iniciando Copia para o Slave:
+        ```sh
+        mysql> START SLAVE;
+        ```
+
+        - Verificando Status:
+        ```sh
+        mysql> SHOW SLAVE STATUS\G;
+        ```
+
+        - Saida:
+        ```sh
+        *************************** 1. row ***************************
+                Slave_IO_State: Waiting for master to send event
+                    Master_Host: 12.10.10.209
+                    Master_User: user-slave-2
+                    Master_Port: 3306
+                Connect_Retry: 60
+                Master_Log_File: mysql-bin.000003
+            Read_Master_Log_Pos: 115
+                Relay_Log_File: slave-relay-bin.000003
+                Relay_Log_Pos: 324
+        Relay_Master_Log_File: mysql-bin.000003
+                Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+        ```
 ___
-4. Configuração do InnoDB:
-    - Configure o arquivo de configuração do MySQL para usar o InnoDB
-    ```sh
-    sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >nano /etc/mysql/mysql.conf.d/mysqld.cnf
-    >```
 
-    - Adicione as seguintes linhas:
-    ```nano
-    [mysqld]
-    default-storage-engine = InnoDB
-    ```
+>>> VALIDADO ATE AQUI
 
-    - Reinicie o MySQL:
-    ```sh
-    sudo systemctl restart mysql && sudo systemctl status mysql
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >systemctl restart mysql && systemctl status mysql
-    >```
+4. Instalação do ProxySQL:
 
-    >>> VALIDADO ATE AQUI
-___
-5. Instalação do ProxySQL:
+    
+
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
     sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/Debian/ bullseye main" >> /etc/apt/sources.list && sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
