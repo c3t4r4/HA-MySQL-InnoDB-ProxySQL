@@ -1,106 +1,167 @@
 # Tutorial para criar uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL no Debian 11
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+
+## Diagrama Usado:
+![Diagrama](diagrama.png "Diagrama")
 ___
 ## Pré-requisitos
-- Três servidores Debian 11 com acesso à internet.
-- Sendo um para o ProxySQL e os demais como Master-Slave do MySQL.
-- Uma conta de superusuário (root) nos servidores.
+- 04 servidores Debian 11 com acesso à internet.
+- Sendo:
+    - 01 = ProxySQL
+    - 01 = MySQL Master (Escrita no Banco)
+    - 02 = MySQL Slave (Leitura no Banco)
 ___
 ## Passo a passo
 
 0. Preparação:
-    - Instale o Debian 11 em pelo menos três servidores diferentes. Estes servidores serão os membros do seu cluster.
-    - Atualize as informações de pacote e instale o software-properties-common para habilitar o repositório do MySQL:
+    - Instale o Debian 11 nos servidores diferentes.
+    - Atualize as informações de pacote:
     ```sh
-    sudo apt update && sudo timedatectl set-timezone America/Sao_Paulo && sudo apt update && sudo apt upgrade -y && sudo apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all -y install software-properties-common wget gnupg -y
+    sudo apt update && sudo timedatectl set-timezone America/Sao_Paulo && sudo apt update && sudo apt upgrade -y && sudo apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all -y install software-properties-common wget gnupg ufw -y
     ```
     > Proxmox use isso:
     > ```sh
-    >apt update && timedatectl set-timezone America/Sao_Paulo && apt update && apt upgrade -y && apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all wget gnupg -y
+    >apt update && timedatectl set-timezone America/Sao_Paulo && apt update && apt upgrade -y && apt install curl net-tools software-properties-common acl unzip htop ncdu locales locales-all wget gnupg ufw -y
     >```
 
-    - Adicione o repositório do MySQL ao sistema:
-    ```sh
-    wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
-    >```
+1. Configurando o MASTER:
 
-    - Configuração Padrão:
-    ![Config MySQL](imagem1.png "Config MySQL")
-___
-1. Instalação do MySQL:
-    - Instale o MySQL no Debian 11:
-    ```sh
-    sudo apt install mysql-server -y && mysql_secure_installation
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >apt install mysql-server -y && mysql_secure_installation
-    >```
+    - Após Executar o Passo 0.
 
-    - Verifique se o MySQL está rodando:
-    ```sh
-    sudo systemctl status mysql
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >systemctl status mysql
-    >```
-___
-2. Configuração do MySQL:
-    1. Configurando MASTER:
+    - Configurando UFW:
+        - Adicione regras UFW:
+            ```sh
+            ufw enable && ufw allow from 12.10.10.0/24 && ufw status
+            ```
+
+    - Instalação do MySQL:
+        - Adicione o repositório do MySQL ao sistema:
+        ```sh
+        wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
+        >```
+
+        - Configuração Padrão:
+        ![Config MySQL](imagem1.png "Config MySQL")
+        - Instale o MySQL no Debian 11:
+        ```sh
+        sudo apt install mysql-server -y && mysql_secure_installation
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >apt install mysql-server -y && mysql_secure_installation
+        >```
+
+        - Verifique se o MySQL está rodando:
+        ```sh
+        sudo systemctl status mysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl status mysql
+        >```
+        
+    - Configuração do MySQL:
 
         - Configure o arquivo de configuração do MySQL para permitir o acesso remoto:
-        ```sh
-        sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
-        ```
-        > Proxmox use isso:
-        > ```sh
-        >nano /etc/mysql/mysql.conf.d/mysqld.cnf
-        >```
+            ```sh
+            sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+            ```
+            > Proxmox use isso:
+            > ```sh
+            >nano /etc/mysql/mysql.conf.d/mysqld.cnf
+            >```
 
-        - Adicione as seguintes linhas:
-        ```nano
-        [mysqld]
-        bind-address = 0.0.0.0
-        server-id = 1
-        log_bin = /var/log/mysql/mysql-bin.log
-        max_binlog_size = 500M
-        ```
+            - Adicione as seguintes linhas:
+            ```nano
+            [mysqld]
 
-        - Reinicie o MySQL:
-        ```sh
-        sudo systemctl restart mysql && sudo systemctl status mysql
-        ```
-        > Proxmox use isso:
-        > ```sh
-        >systemctl restart mysql && systemctl status mysql
-        >```
+            default-storage-engine = InnoDB
+            bind-address = 0.0.0.0
+            server-id = 1
+            log_bin = /var/log/mysql/mysql-bin.log
+            max_binlog_size = 500M
+            ```
 
-        - Essa parte você já precisa ter o ip do slave para criar o usuário:
+            - Reinicie o MySQL:
+            ```sh
+            sudo systemctl restart mysql && sudo systemctl status mysql
+            ```
+            > Proxmox use isso:
+            > ```sh
+            >systemctl restart mysql && systemctl status mysql
+            >```
+
+        - Criando os usuários:
             - Acesse o console do MySQL:
             ```sh
             mysql -u root -p
             ```
             - Configurando usuário slave:
             ```sh
-            mysql> create user 'user-slave-1'@'ip-do-slave' IDENTIFIED WITH mysql_native_password by 'strong-pass';
+            mysql> create user 'user-slave-1'@'12.10.10.216' IDENTIFIED WITH mysql_native_password by 'strong-pass';
 
-            mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'ip-do-slave';
+            mysql> create user 'user-slave-2'@'12.10.10.229' IDENTIFIED WITH mysql_native_password by 'strong-pass';
+
+            mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-1'@'12.10.10.216';
+
+            mysql> GRANT REPLICATION SLAVE ON *.* TO 'user-slave-2'@'12.10.10.229';
             mysql> FLUSH PRIVILEGES;
+___
+
+2. Configurando SLAVE 1:
+
+    - Após Executar o Passo 0.
+
+    - Configurando UFW:
+        - Adicione regras UFW:
+            ```sh
+            ufw enable && ufw allow from 12.10.10.0/24 && ufw status
             ```
-    2. Configurando SLAVE:
-        - Configure o arquivo de configuração do MySQL slave:
+    - Instalação do MySQL:
+
+        - Adicione o repositório do MySQL ao sistema:
+        ```sh
+        wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
+        >```
+
+        - Configuração Padrão:
+        ![Config MySQL](imagem1.png "Config MySQL")
+        - Instale o MySQL no Debian 11:
+        ```sh
+        sudo apt install mysql-server -y && mysql_secure_installation
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >apt install mysql-server -y && mysql_secure_installation
+        >```
+
+        - Verifique se o MySQL está rodando:
+        ```sh
+        sudo systemctl status mysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl status mysql
+        >```
+
+    - Configure o arquivo de configuração do MySQL slave 1:
         ```sh
         sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
         ```
         - Adicione as seguintes linhas:
         ```nano
         [mysqld]
+
+        default-storage-engine = InnoDB
         bind-address = 0.0.0.0
         server-id = 2
         read_only = 1
@@ -108,74 +169,53 @@ ___
         max_binlog_size = 500M
         ```
 
-        - Reinicie o MySQL:
+2. Configurando SLAVE 1:
+    - Instalação do MySQL:
+
+        - Adicione o repositório do MySQL ao sistema:
         ```sh
-        sudo systemctl restart mysql && sudo systemctl status mysql
+        wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
         ```
         > Proxmox use isso:
         > ```sh
-        >systemctl restart mysql && systemctl status mysql
+        >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
         >```
 
-        - Acesse o console do MySQL:
+        - Configuração Padrão:
+        ![Config MySQL](imagem1.png "Config MySQL")
+        - Instale o MySQL no Debian 11:
         ```sh
-        mysql -u root -p
+        sudo apt install mysql-server -y && mysql_secure_installation
         ```
+        > Proxmox use isso:
+        > ```sh
+        >apt install mysql-server -y && mysql_secure_installation
+        >```
 
-        - Coletando Info do Server:
+        - Verifique se o MySQL está rodando:
         ```sh
-        mysql> SHOW MASTER STATUS;
+        sudo systemctl status mysql
         ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl status mysql
+        >```
 
-        - Coletando Info do Server:
+    - Configure o arquivo de configuração do MySQL slave 1:
         ```sh
-        *************************** 1. row ***************************
-        File: mysql-bin.000002
-        Position: 1047
-        Binlog_Do_DB: 
-        Binlog_Ignore_DB: 
-        Executed_Gtid_Set: 
-        1 row in set (0.00 sec)
+        sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
         ```
+        - Adicione as seguintes linhas:
+        ```nano
+        [mysqld]
 
-        - Configure o usuário e a senha para o acesso remoto ao MySQL:
-        ```sh
-        mysql> CHANGE MASTER TO
-            MASTER_HOST='ip-do-master',
-            MASTER_USER='user-slave-1',
-            MASTER_PASSWORD='passwd-user-slave-1',
-            MASTER_PORT=3306,
-            MASTER_LOG_FILE='mysql-bin.000002',
-            MASTER_LOG_POS=1047,
-            MASTER_CONNECT_RETRY=10;
+        default-storage-engine = InnoDB
+        bind-address = 0.0.0.0
+        server-id = 2
+        read_only = 1
+        log_bin = /var/log/mysql/mysql-bin.log
+        max_binlog_size = 500M
         ```
-3. Replicação do MySQL:
-    - Iniciando Copia para o Slave:
-    ```sh
-    mysql> START SLAVE;
-    ```
-
-    - Verificando Status:
-    ```sh
-    mysql> SHOW SLAVE STATUS\G;
-    ```
-
-    - Saida:
-    ```sh
-    *************************** 1. row ***************************
-            Slave_IO_State: Waiting for master to send event
-                Master_Host: ip-do-master
-                Master_User: user-slave-1
-                Master_Port: 3306
-            Connect_Retry: 60
-            Master_Log_File: mysql-bin.000002
-        Read_Master_Log_Pos: 1047
-            Relay_Log_File: slave-relay-bin.000002
-            Relay_Log_Pos: 324
-    Relay_Master_Log_File: mysql-bin.000002
-            Slave_IO_Running: Yes
-        Slave_SQL_Running: Yes
-    ```
 ___
 4. Configuração do InnoDB:
     - Configure o arquivo de configuração do MySQL para usar o InnoDB
@@ -207,11 +247,11 @@ ___
 5. Instalação do ProxySQL:
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
-    sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list && sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/Debian/ bullseye main" >> /etc/apt/sources.list && sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
     ```
     > Proxmox use isso:
     > ```sh
-    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.0.x/Debian/ buster main" >> /etc/apt/sources.list && apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/Debian/ bullseye main" >> /etc/apt/sources.list && apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
     >```
 
     - Atualize a lista de pacotes:
