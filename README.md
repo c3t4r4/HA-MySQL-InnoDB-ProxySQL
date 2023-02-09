@@ -369,28 +369,44 @@ ___
         ```
 ___
 
->>> VALIDADO ATE AQUI
+4. Configurando o ProxySQL:
 
-4. Instalação do ProxySQL:
+    - Após Executar o Passo 0.
 
+    - Configurando UFW:
+        - Adicione regras UFW:
+            ```sh
+            ufw enable && ufw allow from 12.10.10.0/24 && ufw status
 
+    - Instalação do MySQL Client:
+
+        - Adicione o repositório do MySQL ao sistema:
+        ```sh
+        wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb && sudo apt update
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >wget https://repo.mysql.com//mysql-apt-config_0.8.24-1_all.deb && dpkg -i mysql-apt-config_0.8.24-1_all.deb && apt update
+        >```
+
+        - Configuração Padrão:
+        ![Config MySQL](imagem1.png "Config MySQL")
+        - Instale o MySQL no Debian 11:
+        ```sh
+        sudo apt install mysql-client -y
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >apt install mysql-client -y
+        >```
 
     - Adicione o repositório do ProxySQL ao seu sistema:
     ```sh
-    sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/Debian/ bullseye main" >> /etc/apt/sources.list && sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
+    sudo wget -O - 'https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/repo_pub_key' | apt-key add - && sudo echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/$(lsb_release -sc)/ ./" | tee /etc/apt/sources.list.d/proxysql.list && sudo apt update
     ```
     > Proxmox use isso:
     > ```sh
-    > echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/Debian/ bullseye main" >> /etc/apt/sources.list && apt-key adv --keyserver keys.gnupg.net --recv-keys 5072E1F5
-    >```
-
-    - Atualize a lista de pacotes:
-    ```sh
-    sudo apt update
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >apt update
+    > wget -O - 'https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/repo_pub_key' | apt-key add - && echo "deb https://repo.proxysql.com/ProxySQL/proxysql-2.4.x/$(lsb_release -sc)/ ./" | tee /etc/apt/sources.list.d/proxysql.list && apt update
     >```
 
     - Instale o ProxySQL:
@@ -401,61 +417,164 @@ ___
     > ```sh
     >apt install proxysql
     >```
+___
+
+5. Criando Usuários do ProxySQL no MySQL Master (Criando no Master, será replicado nos Slaves):
+    - Criando os usuários:
+        - Acesse o console do MySQL:
+        ```sh
+        mysql -u root -p
+        ```
+        - Configurando usuário slave:
+        ```sh
+        mysql> CREATE USER 'sysbench'@'12.10.10.%' IDENTIFIED WITH mysql_native_password BY 'senha-sysbench';
+
+        mysql> CREATE USER 'monitor'@'12.10.10.%' IDENTIFIED WITH mysql_native_password BY 'senha-monitor';
+
+        mysql> GRANT ALL PRIVILEGES on *.* TO 'sysbench'@'12.10.10.%' WITH GRANT OPTION;
+
+        mysql> GRANT ALL PRIVILEGES on *.* TO 'monitor'@'12.10.10.%' WITH GRANT OPTION;
+
+        mysql> FLUSH PRIVILEGES;
+___
 
 6. Configure o ProxySQL: 
-    - Configure o ProxySQL para apontar para o seu servidor principal e secundário:
-    ```sh
-    sudo nano /etc/proxysql.cnf
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >nano /etc/proxysql.cnf
-    >```
+    - Iniciando o ProxySQL:
+        ```sh
+        sudo systemctl start proxysql && sudo systemctl status proxysql
+        ```
+        > Proxmox use isso:
+        > ```sh
+        >systemctl start proxysql && systemctl status proxysql
+        >```
 
-    - Adicione as seguintes linhas:
-    ```nano
-    [mysql_servers]
-    hostgroup_id=10
-    hostname=<endereço IP do servidor principal>
-    port=3306
-    status=ON
-    weight=1
+    - Conectando com o admin do ProxySQL:
+        ```sh
+        mysql -u admin -padmin -h 127.0.0.1 -P6032
+        ```
 
-    hostgroup_id=20
-    hostname=<endereço IP do servidor secundário>
-    port=3306
-    status=ON
-    weight=2
-    ```
+    > Nessa Configuração usaremos apenas 2 grupos, sendo 0 para gravação e 1 para leitura.
 
-    - Reinicie o ProxySQL:
-    ```sh
-    sudo systemctl restart proxysql
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >systemctl restart proxysql
-    >```
+    - Conectando Servidores nos seu grupos:
+        ```sh
+        mysql> INSERT INTO mysql_servers(hostgroup_id,hostname,port,weight) VALUES (0,'12.10.10.209',3306, 1000);
+
+        mysql> INSERT INTO mysql_servers(hostgroup_id,hostname,port,weight) VALUES (1,'12.10.10.209',3306, 200);
+
+        mysql> INSERT INTO mysql_servers(hostgroup_id,hostname,port,weight) VALUES (1,'12.10.10.216',3306, 1000);
+
+        mysql> INSERT INTO mysql_servers(hostgroup_id,hostname,port,weight) VALUES (1,'12.10.10.229',3306, 1000);
+
+        mysql> INSERT INTO  mysql_replication_hostgroups VALUES (0,1,'production');
+
+        mysql> SELECT * FROM mysql_replication_hostgroups;
+        ```
+
+    - Saida:
+        ```sh
+        +------------------+------------------+------------+------------+
+        | writer_hostgroup | reader_hostgroup | check_type | comment    |
+        +------------------+------------------+------------+------------+
+        | 0                | 1                | read_only  | production |
+        +------------------+------------------+------------+------------+
+        1 row in set (0.00 sec)
+        ```
+    
+    - Continuando:
+        ```sh
+        mysql> LOAD MYSQL SERVERS TO RUNTIME; 
+        mysql> SAVE MYSQL SERVERS TO DISK;
+
+        mysql> SELECT hostgroup_id,hostname,port,status,weight FROM mysql_servers;
+        ```
+
+    - Saida:
+        ```sh
+        +--------------+--------------+------+--------+--------+
+        | hostgroup_id | hostname     | port | status | weight |
+        +--------------+--------------+------+--------+--------+
+        | 0            | 12.10.10.209 | 3306 | ONLINE | 1000   |
+        | 1            | 12.10.10.209 | 3306 | ONLINE | 200    |
+        | 1            | 12.10.10.216 | 3306 | ONLINE | 1000   |
+        | 1            | 12.10.10.229 | 3306 | ONLINE | 1000   |
+        +--------------+--------------+------+--------+--------+
+        4 rows in set (0.00 sec)
+        ```
+
+    - Continuando:
+        ```sh
+        mysql> UPDATE global_variables SET variable_value='monitor' WHERE variable_name='mysql-monitor_password';
+
+        mysql> LOAD MYSQL VARIABLES TO RUNTIME;
+
+        mysql> SAVE MYSQL VARIABLES TO DISK;
+
+        mysql> INSERT INTO mysql_users(username,password,default_hostgroup) VALUES ('sysbench','senha-sysbench',1);
+
+        mysql> SELECT username,password,active,default_hostgroup,default_schema,max_connections,max_connections FROM mysql_users;
+        ```
+
+    - Saida:
+        ```sh
+        +----------+-----------------------+--------+-------------------+----------------+-----------------+-----------------+
+        | username | password              | active | default_hostgroup | default_schema | max_connections | max_connections |
+        +----------+-----------------------+--------+-------------------+----------------+-----------------+-----------------+
+        | sysbench | senha-sysbench | 1      | 1                 | NULL           | 10000           | 10000           |
+        +----------+-----------------------+--------+-------------------+----------------+-----------------+-----------------+
+        1 row in set (0.00 sec)
+        ```
+
+    - Continuando:
+        ```sh
+        mysql> LOAD MYSQL USERS TO RUNTIME;
+        mysql> SAVE MYSQL USERS TO DISK;
+
+        mysql> UPDATE global_variables SET variable_value=2000 WHERE variable_name IN ('mysql-monitor_connect_interval','mysql-monitor_ping_interval','mysql-monitor_read_only_interval');
+
+        mysql> UPDATE global_variables SET variable_value = 1000 where variable_name = 'mysql-monitor_connect_timeout';
+
+        mysql> UPDATE global_variables SET variable_value = 500 where variable_name = 'mysql-monitor_ping_timeout';
+
+        mysql> LOAD MYSQL VARIABLES TO RUNTIME;
+        mysql> SAVE MYSQL VARIABLES TO DISK;
+
+        mysql> UPDATE mysql_servers SET max_replication_lag=60;
+
+        mysql> INSERT INTO mysql_query_rules (active, match_digest, destination_hostgroup, apply) VALUES (1, '^SELECT.*', 1, 0);
+
+        mysql> INSERT INTO mysql_query_rules (active, match_digest, destination_hostgroup, apply) VALUES (1, '^SELECT.*FOR UPDATE', 0, 1);
+
+        mysql> SELECT active, match_pattern, destination_hostgroup, apply FROM mysql_query_rules;
+
+        mysql> SELECT rule_id, match_digest,destination_hostgroup hg_id, apply FROM mysql_query_rules WHERE active=1;
+        ```
+    
+    - Saida:
+        ```sh
+        +---------+---------------------+-------+-------+
+        | rule_id | match_digest        | hg_id | apply |
+        +---------+---------------------+-------+-------+
+        | 1       | ^SELECT.*           | 1     | 0     |
+        | 2       | ^SELECT.*FOR UPDATE | 0     | 1     |
+        +---------+---------------------+-------+-------+
+        2 rows in set (0.00 sec)
+        ```
+
+    - Continuando:
+        ```sh
+        mysql> LOAD MYSQL QUERY RULES TO RUNTIME;
+        mysql> SAVE MYSQL QUERY RULES TO DISK;
+        ```
 ___
-7. Verificação da configuração:
-    - Verifique o status do ProxySQL:
-    ```sh
-    sudo systemctl status proxysql
-    ```
-    > Proxmox use isso:
-    > ```sh
-    >systemctl status proxysql
-    >```
 
-    - Acesse o console do ProxySQL:
-    ```sh
-    mysql -u admin -padmin -h 127.0.0.1 -P6032
-    ```
+>>> VALIDADO ATE AQUI
 
-    - Verifique se o ProxySQL está apontando para o servidor principal e secundário:
-    ```sh
-    SELECT hostgroup_id, hostname, port, status, weight FROM mysql_servers;
-    ```
+7. Validando DB Connection: 
+    - Iniciando o ProxySQL:
+        ```sh
+        mysql -u sysbench -p sysbench -h 127.0.0.1 -P6033 -e "SELECT @@server_id"
+        ```
+
 ___
 
 > Com esses passos, você deve ter uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL configurada no seu Debian 11. Certifique-se de testar sua configuração antes de colocá-la em produção.
