@@ -833,7 +833,7 @@ ___
 - Considerações:
     > Com esses passos, você deve ter uma solução escalável com MySQL e ProxySQL configurada no seu Debian 11. Certifique-se de testar sua configuração antes de colocá-la em produção.
     >
-    >A conexão com o banco de dados é feita através do ProxySQL da mesma forma que seria feita com um banco de dados diretamente. Você precisa especificar o endereço IP e a porta do ProxySQL como seu host de banco de dados e a porta 6033,padrão para o ProxySQL e não mais a porta 3306 padrão do MySQL. Além disso, você precisa fornecer o nome de usuário e a senha para autenticação no banco de dados.
+    >A conexão com o banco de dados é feita através do ProxySQL da mesma forma que seria feita com um banco de dados diretamente. Você precisa especificar o endereço IP e a porta do ProxySQL como seu host de banco de dados e a porta 6033, padrão para o ProxySQL e não mais a porta 3306 padrão do MySQL. Além disso, você precisa fornecer o nome de usuário e a senha para autenticação no banco de dados.
 ___
 
 - Exemplo de Conexão no ProxySQL:
