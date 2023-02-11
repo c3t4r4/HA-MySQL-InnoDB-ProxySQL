@@ -1,4 +1,4 @@
-# Tutorial para criar uma solução de alta disponibilidade com MySQL, InnoDB e ProxySQL no Debian 11
+# Tutorial para criar uma solução de alta disponibilidade com MySQL e ProxySQL no Debian 11
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
